@@ -1,0 +1,26 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Garzón</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="topbar"><img src="logo.png" class="logo-mini" onerror="this.style.display='none'"><h2>Garzón</h2><button id="logout" class="btn small">Salir</button></header>
+<main class="container">
+<section class="card">
+<label>Mesa: <select id="selectTable"></select></label>
+<button id="btnChangeTable" class="btn">Cambiar mesa</button>
+<h3>Menú</h3><div id="menuList"></div><h3>Carrito</h3><div id="cart">(vacío)</div>
+<div class="row"><label>Propina: <select id="tipPct"><option value="0">0%</option><option value="0.05">5%</option><option value="0.10" selected>10%</option><option value="0.15">15%</option></select></label><button id="btnSend" class="btn">Enviar a cocina</button></div>
+</section>
+<section class="card"><h3>Tickets</h3><button id="btnPreview" class="btn">Ver ticket previo</button><div id="ticketArea"></div></section>
+<footer class="footer">Sistema desarrollado por C.M.G. © 2025 TangolosoPedidos</footer>
+</main>
+<script src="app.js"></script>
+<script>
+const user = getCurrentUser(); if(!user || user.role!=='garzon') location.href='index.html';
+document.getElementById('logout').onclick = ()=>logout();
+initTablesSelect('selectTable');
+const menu = getDemoMenu(); renderMenu(); let cart=[];
+function renderMenu(){ const el=document.getElementById('menuList'); el.innerHTML=''; menu.forEach(m=>{ const row=document.createElement('div'); row.className='menu-item'; row.innerHTML=`<strong>${m.name}</strong> — $${formatMoney(m.price)} <button data-id="${m.id}">Agregar</button>`; el.appendChild(row); }); }
+document.getElementById('menuList').addEventListener('click', e=>{ if(e.target.tagName==='BUTTON'){ const id=parseInt(e.target.dataset.id); const it=menu.find(x=>x.id===id); cart.push(it); renderCart(); }});
+function renderCart(){ const area=document.getElementById('cart'); if(cart.length===0){ area.innerHTML='(vacío)'; return; } const subtotal=cart.reduce((s,x)=>s+x.price,0); area.innerHTML = cart.map((c,i)=>`<div>${i+1}. ${c.name} — $${formatMoney(c.price)}</div>`).join('')+`<div>Subtotal: $${formatMoney(subtotal)}</div>`;}
+document.getElementById('btnSend').addEventListener('click', ()=>{ if(cart.length===0){ alert('Carrito vacío'); return; } const table=document.getElementById('selectTable').value; const tipPct=parseFloat(document.getElementById('tipPct').value); const subtotal=cart.reduce((s,x)=>s+x.price,0); const tipAmount=round(subtotal*tipPct); const total=round(subtotal+tipAmount); const order={table,items:cart,subtotal,tipPct,tipAmount,total,status:'pending',createdBy:user.username,createdAt:Date.now()}; const id=saveOrderDemo(order); alert('Pedido enviado (ID '+id+')'); cart=[]; renderCart(); });
+document.getElementById('btnPreview').addEventListener('click', ()=>{ const table=document.getElementById('selectTable').value; const subtotal=cart.reduce((s,x)=>s+x.price,0); const tipPct=parseFloat(document.getElementById('tipPct').value); const tipAmount=round(subtotal*tipPct); const total=round(subtotal+tipAmount); const tpl=document.getElementById('ticketArea'); tpl.innerHTML=''; const ticket=document.createElement('div'); ticket.className='ticket'; ticket.innerHTML=`<h3>Tangoloso</h3><div>Mesa: ${table}</div><hr>${cart.map(i=>'<div>'+i.name+' — $'+formatMoney(i.price)+'</div>').join('')}<hr><div>Subtotal: $${formatMoney(subtotal)}</div><div>Propina: $${formatMoney(tipAmount)}</div><div class="total">Total: $${formatMoney(total)}</div>`; tpl.appendChild(ticket); });
+document.getElementById('btnChangeTable').addEventListener('click', ()=>{ const current=document.getElementById('selectTable').value; const neu=prompt('Nuevo número de mesa (1-100):',current); if(!neu) return; const ok=changeTableForUser(current,neu,user.username); if(ok) alert('Cambio registrado: '+current+' → '+neu'); });
+</script>
+</body></html>

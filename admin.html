@@ -1,0 +1,21 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="topbar"><h2>Administrador</h2><div class="header-actions"><button id="btnNewUser" class="btn small">Crear usuario</button><button id="btnLogout" class="btn small">Salir</button></div></header>
+<main class="container">
+<section class="card"><h3>Resumen rápido</h3><div id="summaryArea">Cargando...</div><button id="btnRefresh" class="btn">Refrescar</button></section>
+<section class="card"><h3>Gastos del día</h3><div><input id="expenseDesc" placeholder="Descripción"><input id="expenseAmount" placeholder="Monto"><button id="btnAddExpense" class="btn">Agregar gasto</button></div><div id="expensesList"></div></section>
+<section class="card"><h3>Pagos pendientes / Confirmar pago</h3><div id="paymentsList"></div></section>
+<section class="card"><h3>Registro de cambios de mesa</h3><div id="changesList"></div></section>
+<footer class="footer">Sistema desarrollado por C.M.G. © 2025 TangolosoPedidos</footer>
+</main>
+<script src="app.js"></script>
+<script>
+const user = getCurrentUser(); if(!user||user.role!=='admin') location.href='index.html';
+document.getElementById('btnLogout').onclick = ()=>logout();
+document.getElementById('btnNewUser').addEventListener('click', ()=>{ const username=prompt('Nombre de usuario:'); const pass=prompt('Contraseña:'); const role=prompt('Rol (garzon, kitchen, cajero, admin):','garzon'); if(!username||!pass) return alert('Datos incompletos'); createUserDemo({username,password:pass,role}); alert('Usuario creado: '+username); });
+function refreshAll(){ const summary=fetchSummaryDemo(); document.getElementById('summaryArea').innerHTML=`<div>Total pedidos (pagados): ${summary.totalOrders}</div><div>Total ventas: $${formatMoney(summary.totalSales)}</div><div>Total propinas: $${formatMoney(summary.totalTips)}</div><div>Ventas por método:<div>Efectivo: $${formatMoney(summary.byMethod.cash||0)}</div><div>Débito: $${formatMoney(summary.byMethod.debit||0)}</div><div>Crédito: $${formatMoney(summary.byMethod.credit||0)}</div><div>Transferencia: $${formatMoney(summary.byMethod.transfer||0)}</div></div>`; const expenses=getExpensesDemo(); document.getElementById('expensesList').innerHTML = expenses.map(e=>`<div>${new Date(e.date).toLocaleString()} — ${e.desc} — $${formatMoney(e.amount)}</div>`).join('') || '<div>(sin gastos)</div>'; const payments=getUnpaidOrdersDemo(); document.getElementById('paymentsList').innerHTML = payments.map(o=>`<div>ID ${o.id} — Mesa ${o.table} — Total: $${formatMoney(o.total)} <button onclick="openPayment(${o.id})" class="btn small">Registrar pago</button></div>`).join('') || '<div>(sin pagos pendientes)</div>'; const changes=getTableChangesDemo(); document.getElementById('changesList').innerHTML = changes.map(c=>`<div>${new Date(c.date).toLocaleString()} — ${c.by} cambió ${c.from} → ${c.to}</div>`).join('') || '<div>(sin cambios)</div>'; }
+document.getElementById('btnRefresh').addEventListener('click', refreshAll);
+document.getElementById('btnAddExpense').addEventListener('click', ()=>{ const desc=document.getElementById('expenseDesc').value.trim(); const amt=parseFloat(document.getElementById('expenseAmount').value); if(!desc||isNaN(amt)) return alert('Datos inválidos'); addExpenseDemo({desc,amount:amt,date:Date.now(),by:user.username}); document.getElementById('expenseDesc').value=''; document.getElementById('expenseAmount').value=''; refreshAll(); });
+function openPayment(id){ const method1=prompt('Método 1 (cash/debit/credit/transfer):','cash'); const amt1=parseFloat(prompt('Monto 1:','0')); const method2=prompt('Método 2 (opcional):',''); const amt2=method2?parseFloat(prompt('Monto 2:','0')):0; registerPaymentDemo(id,[{method:method1,amount:amt1},{method:method2,amount:amt2}]).then(()=>{alert('Pago registrado'); refreshAll();}).catch(e=>alert('Error:'+e.message)); }
+refreshAll();
+</script>
+</body></html>

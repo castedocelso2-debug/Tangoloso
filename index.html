@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TangolosoPedidos — Login</title><link rel="stylesheet" href="style.css"></head><body>
+<div class="container"><header class="brand"><img src="logo.png" alt="logo" class="logo" onerror="this.style.display='none'"><h1>TangolosoPedidos</h1><p class="tag">Sabor peruano — Demo</p></header>
+<main class="card"><h2>Iniciar sesión</h2><input id="username" placeholder="Usuario"><input id="password" type="password" placeholder="Contraseña"><div class="role-note">Usuarios demo: garzon/1234 | cocina/1234 | admin/1234</div><button id="loginBtn" class="btn">Entrar</button><p id="msg" class="msg"></p><footer class="footer">Sistema desarrollado por C.M.G. © 2025 TangolosoPedidos</footer></main></div>
+<script src="app.js"></script>
+<script>
+document.getElementById('loginBtn').addEventListener('click', function(){
+  const u = document.getElementById('username').value.trim();
+  const p = document.getElementById('password').value.trim();
+  if(!u||!p){ document.getElementById('msg').textContent='Ingrese usuario y contraseña.'; return; }
+  const ok = loginDemo(u,p);
+  if(ok){ if(ok.role==='garzon') location.href='waiter.html'; else if(ok.role==='kitchen') location.href='kitchen.html'; else if(ok.role==='admin') location.href='admin.html'; else location.href='waiter.html'; }
+  else document.getElementById('msg').textContent='Credenciales incorrectas.';
+});
+</script>
+</body></html>

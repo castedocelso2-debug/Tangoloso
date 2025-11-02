@@ -1,0 +1,12 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cocina</title><link rel="stylesheet" href="style.css"></head><body>
+<header class="topbar"><h2>Cocina</h2><button id="logout" class="btn small">Salir</button></header>
+<main class="container"><section class="card"><h3>Pedidos en cola</h3><div id="ordersArea">Cargando...</div><button id="btnRefresh" class="btn">Refrescar</button></section><footer class="footer">Sistema desarrollado por C.M.G. © 2025 TangolosoPedidos</footer></main>
+<script src="app.js"></script>
+<script>
+const user = getCurrentUser(); if(!user || user.role!=='kitchen') location.href='index.html';
+document.getElementById('logout').onclick = ()=>logout();
+function renderOrders(list){ const out=document.getElementById('ordersArea'); out.innerHTML=''; if(!list||list.length==0){ out.innerHTML='<em>No hay pedidos</em>'; return; } list.forEach(o=>{ const el=document.createElement('div'); el.className='order-card'; el.innerHTML=`<strong>ID ${o.id}</strong> — Mesa: ${o.table}<div>${o.items.map(i=>' <div>'+i.name+' — $'+formatMoney(i.price)+'</div>').join('')}</div><div>Estado: <span id="s${o.id}">${o.status}</span></div><div>Acciones:<button onclick="updateStatus(${o.id},'preparing')" class="btn small">Preparando</button><button onclick="updateStatus(${o.id},'ready')" class="btn small">Listo</button></div>`; out.appendChild(el); }); }
+subscribeOrders(renderOrders);
+function updateStatus(id,status){ updateOrderStatusDemo(id,status); }
+</script>
+</body></html>
